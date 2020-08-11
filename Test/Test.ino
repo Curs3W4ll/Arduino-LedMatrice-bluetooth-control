@@ -136,7 +136,7 @@ String chiffres[][8] =
   "111112"
   //--9--//
 }};
-String contenu[8]; /*=
+/*char contenu[8][20]; =
 {
   "                    ",
   "                    ",
@@ -231,32 +231,39 @@ void setup()
 
 void loop()
 {
+  char contenu[8][20];
   for (int i=0;i<8;i++) {
-    contenu[i] = "";
+    contenu[i][0] = '\0';
   }
   //for (int i=1;i>=0;i--) {
+  /*
   for (int i=0;i<mot.length();i++) {
-    for (int ligne=0;ligne<4;ligne++) {
-      char ajout[50];
+    for (int ligne=0;ligne<2;ligne++) {
+      //char ajout[50];
       for (int ibit=0;ibit<chiffres[i][ligne].length();ibit++) {
         //ajout += chiffres[i][ligne].charAt(ibit);
-        String tmp =  chiffres[i][ligne].charAt(ibit);
-        chiffres[i][ligne].charAt(ibit).toCharArray(ajout,50);
+        contenu[i] += chiffres[i][ligne].charAt(ibit);
+        //String tmp = (String)chiffres[i][ligne].charAt(ibit);
+        //tmp.toCharArray(ajout,50);
         if (i > 0) {
-          Serial.println(chiffres[i][ligne].charAt(ibit));
+          //Serial.println(chiffres[i][ligne].charAt(ibit));
           Serial.println(contenu[ligne]);
-          Serial.print("Ajout : ");
-          Serial.println(ajout);
+          //Serial.print("Ajout : ");
+          //Serial.println(ajout);
         }
       }
-      contenu[ligne] += ajout;
+      //contenu[ligne] += ajout;
     }
   }
-  /*for (int i=0;i<mot.length();i++) {
+  */
+  for (int i=0;i<mot.length();i++) {
     for (int ligne=0;ligne<8;ligne++) {
-      contenu[ligne] += chiffres[i][ligne];
+      char ajout[50];
+      chiffres[i][ligne].toCharArray(ajout, 50);
+      Serial.println(ajout);
+      strcat(contenu[ligne], ajout);
     }
-  }*/
+  }
   Serial.println("Contenu :");
   for (int i=0;i<8;i++) {
     Serial.println(contenu[i]);
