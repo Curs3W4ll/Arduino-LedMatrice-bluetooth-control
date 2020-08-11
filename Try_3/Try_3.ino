@@ -1,6 +1,9 @@
 #include "LedControl.h"
 
 LedControl lc=LedControl(2,4,3,4);
+const int DROITE = 0;
+const int GAUCHE = 1;
+const int CENTRE = 2;
 
 byte testing[] =
 {
@@ -1151,13 +1154,14 @@ void setup()
     lc.clearDisplay(i);  // Clear Displays
   }
   char mot[] = "Loon";
-  charge_affichage(3,mot);
+  charge_affichage(4,mot,CENTRE);
 }
 
 void loop()
 {
   affiche();
-  delay(2000);
+  delay(3000);
+  charge_affichage(3,"Test",GAUCHE);
   charge_affichage_special(3);
 }
 
@@ -1190,15 +1194,83 @@ void clear_one_affichage(int aff_number) {
   }
 }
 
-void charge_affichage(int free_affichage, char mot[]) {
+int get_led_number(char mot[], int cara_number, int free_affichage) {
+  int led_number = 0;
+  int writen_col = 0;
+  for (int cara=cara_number-1;cara>=0;cara--) {
+    int ascii_code = ((int)mot[cara])-32;
+    if (cara!=cara_number-1) {
+      led_number += 1;
+      writen_col += 1;
+      if (writen_col==8) {
+        writen_col = 0;
+        if (free_affichage==0) {
+          cara = -1;
+        } else {
+          free_affichage -= 1;
+        }
+      }
+    }
+    if (cara>=0) {
+      if (ascii_code == 0) {
+        for (int ligne=0;ligne<8;ligne++) {
+            //bitWrite(affichage[free_affichage][ligne],writen_col,0);
+        }
+        //writen_col += 1;
+      }
+      for (int col=0;col<8;col++) {
+        byte tempbyte = B00000000;
+        for (int ligne=0;ligne<8;ligne++) {
+          bitWrite(tempbyte,ligne,bitRead(ascii[ascii_code][ligne],col));
+        }
+        if (tempbyte!=0) {
+          writen_col += 1;
+          led_number += 1;
+          if (writen_col==8) {
+            writen_col = 0;
+            if (free_affichage==0) {
+              col = 8;
+              cara = -1;
+            } else {
+              free_affichage -= 1;
+            }
+          }
+        }
+      }
+    }
+  }
+  return(led_number);
+}
+
+void charge_affichage(int free_affichage, char mot[], int align) {
   //free_affichage : Nombre de zone d'affichage à utiliser pour le texte (0 à 4);
   //mot[] : mot à afficher
+  //align[] : alignement, trois valeurs possibles : 'droite','gauche' et 'centre'
   clear_affichage();
   int writen_col = 0;
-  free_affichage -= 1;
+  int free_led = free_affichage * 8;
   int cara_number = 0;
   for (int cara=0;mot[cara]!='\0';cara++) {
     cara_number += 1;
+  }
+  int used_led = get_led_number(mot,cara_number,free_affichage);
+  free_affichage -= 1;
+  int unused_led = free_led - used_led;
+  if (free_led-used_led > 0) {
+    switch(align) {
+      case DROITE:
+        writen_col = 0;
+        break;
+      case GAUCHE:
+        writen_col = unused_led;
+        break;
+      case CENTRE:
+        writen_col = unused_led/2;
+        break;
+      default:
+        writen_col = 0;
+        break;
+    }
   }
   for (int cara=cara_number-1;cara>=0;cara--) {
     int ascii_code = ((int)mot[cara])-32;
