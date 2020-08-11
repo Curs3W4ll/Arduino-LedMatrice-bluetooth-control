@@ -1150,16 +1150,15 @@ void setup()
     lc.setIntensity(i,1);  // Set intensity levels
     lc.clearDisplay(i);  // Clear Displays
   }
-  char mot[] = "Loon_OW";
-  charge_affichage(4, mot,0);
+  char mot[] = "Loon";
+  charge_affichage(3,mot);
 }
 
 void loop()
 {
   affiche();
   delay(2000);
-  char mot[] = "Test 2.0";
-  charge_affichage(3,mot,0);
+  charge_affichage_special(3);
 }
 
 void affiche() {
@@ -1181,6 +1180,16 @@ void clear_affichage() {
     }
   }
 }
+
+void clear_one_affichage(int aff_number) {
+  //aff_number : zone d'affichage à clear (0 à 3), 0 -> plus à gauche
+  for (int ligne=0;ligne<8;ligne++) {
+    for (int biti=0;biti<8;biti++) {
+      bitWrite(affichage[aff_number][ligne],biti,0);
+    }
+  }
+}
+
 void charge_affichage(int free_affichage, char mot[]) {
   //free_affichage : Nombre de zone d'affichage à utiliser pour le texte (0 à 4);
   //mot[] : mot à afficher
@@ -1243,62 +1252,10 @@ void charge_affichage(int free_affichage, char mot[]) {
 }
 
 void charge_affichage_special(int spe_aff_number) {
-  //spe_aff_number : numéro de l'affichage spécial à afficher
-  clear_affichage();
-  affichage[3][] = spe
-  int writen_col = 0;
-  free_affichage -= 1;
-  int cara_number = 0;
-  for (int cara=0;mot[cara]!='\0';cara++) {
-    cara_number += 1;
-  }
-  for (int cara=cara_number-1;cara>=0;cara--) {
-    int ascii_code = ((int)mot[cara])-32;
-    if (cara!=cara_number-1) {
-      for (int ligne=0;ligne<8;ligne++) {
-          bitWrite(affichage[free_affichage][ligne],writen_col,0);
-      }
-      writen_col += 1;
-      if (writen_col==8) {
-        writen_col = 0;
-        if (free_affichage==0) {
-          cara = -1;
-        } else {
-          free_affichage -= 1;
-        }
-      }
-    }
-    if (cara>=0) {
-      if (ascii_code == 0) {
-        for (int ligne=0;ligne<8;ligne++) {
-            //bitWrite(affichage[free_affichage][ligne],writen_col,0);
-        }
-        //writen_col += 1;
-      }
-      for (int col=0;col<8;col++) {
-        byte tempbyte = B00000000;
-        for (int ligne=0;ligne<8;ligne++) {
-          bitWrite(tempbyte,ligne,bitRead(ascii[ascii_code][ligne],col));
-        }
-        //Serial.println(tempbyte,BIN);
-        if (tempbyte!=0) {
-          //Serial.println(tempbyte,BIN);
-          for (int ligne=0;ligne<8;ligne++) {
-            bitWrite(affichage[free_affichage][ligne],writen_col,bitRead(tempbyte,ligne));
-            //Serial.println(affichage[0][j],BIN);
-          }
-          writen_col += 1;
-          if (writen_col==8) {
-            writen_col = 0;
-            if (free_affichage==0) {
-              col = 8;
-              cara = -1;
-            } else {
-              free_affichage -= 1;
-            }
-          }
-        }
-      }
-    }
+  //spe_aff_number : numéro de l'affichage spécial à afficher (1 à 3)
+  clear_one_affichage(3);
+  spe_aff_number -=1;
+  for (int ligne=0;ligne<8;ligne++) {
+    affichage[3][ligne] = spe_affichage_layout[spe_aff_number][ligne];
   }
 }
