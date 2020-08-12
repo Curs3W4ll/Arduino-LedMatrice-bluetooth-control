@@ -1,9 +1,21 @@
 #include "LedControl.h"
 
 LedControl lc=LedControl(2,4,3,4);
+
+//--Constantes alignements--//
 const int DROITE = 0;
 const int GAUCHE = 1;
 const int CENTRE = 2;
+
+//--Constantes affichages spécials--//
+const int COEUR = 0;
+const int SMILEY1 = 1;
+const int SMILEY2 = 2;
+const int COEUR_ANIMATE = 3;
+const int DAMIER = 5;
+const int PLUIE = 7;
+
+int animate = 0;
 
 byte testing[] =
 {
@@ -1062,7 +1074,7 @@ byte ascii[][8] =
    B00000000
    //--~--//
 }};
-byte spe_affichage_layout[][8] =
+byte spe_affichage_layout[][9] =
 {{
    B01100110,
    B11111111,
@@ -1071,7 +1083,8 @@ byte spe_affichage_layout[][8] =
    B01111110,
    B00111100,
    B00011000,
-   B00000000
+   B00000000,
+   B00000000 //Bit pour le nombre de frames de l'animation
    //--Coeur fixe--//
 },
 {
@@ -1082,7 +1095,8 @@ byte spe_affichage_layout[][8] =
    B10100101,
    B10011001,
    B01000010,
-   B00111100
+   B00111100,
+   B00000000
    //--Smiley 1--//
 },
 {
@@ -1093,8 +1107,153 @@ byte spe_affichage_layout[][8] =
    B00000000,
    B10000001,
    B01000010,
-   B00111100
+   B00111100,
+   B00000000
    //--Smiley 2--//
+},
+{
+   B00000000,
+   B01100110,
+   B11111111,
+   B11111111,
+   B01111110,
+   B00111100,
+   B00011000,
+   B00000000,
+   B00000010
+   //--Coeur_animate1--//
+},
+{
+   B01100110,
+   B11111111,
+   B11111111,
+   B11111111,
+   B11111111,
+   B01111110,
+   B00111100,
+   B00011000,
+   B00000000
+   //--Coeur_animate2--//
+},
+{
+   B10101010,
+   B01010101,
+   B10101010,
+   B01010101,
+   B10101010,
+   B01010101,
+   B10101010,
+   B01010101,
+   B00000010
+   //--Damier1--//
+},
+{
+   B01010101,
+   B10101010,
+   B01010101,
+   B10101010,
+   B01010101,
+   B10101010,
+   B01010101,
+   B10101010,
+   B00000000
+   //--Damier2--//
+},
+{
+   B01010001,
+   B01000000,
+   B00000000,
+   B00000100,
+   B00000100,
+   B00000100,
+   B00010001,
+   B01010001,
+   B00001000
+   //--Pluie1--//
+},
+{
+   B01010001,
+   B01010001,
+   B01000000,
+   B00000000,
+   B00000100,
+   B00000100,
+   B00000100,
+   B00010001,
+   B00000000
+   //--Pluie2--//
+},
+{
+   B00010001,
+   B01010001,
+   B01010001,
+   B01000000,
+   B00000000,
+   B00000100,
+   B00000100,
+   B00000100,
+   B00000000
+   //--Pluie3--//
+},
+{
+   B00000100,
+   B00010001,
+   B01010001,
+   B01010001,
+   B01000000,
+   B00000000,
+   B00000100,
+   B00000100,
+   B00000000
+   //--Pluie4--//
+},
+{
+   B00000100,
+   B00000100,
+   B00010001,
+   B01010001,
+   B01010001,
+   B01000000,
+   B00000000,
+   B00000100,
+   B00000000
+   //--Pluie5--//
+},
+{
+   B00000100,
+   B00000100,
+   B00000100,
+   B00010001,
+   B01010001,
+   B01010001,
+   B01000000,
+   B00000000,
+   B00000000
+   //--Pluie6--//
+},
+{
+   B00000000,
+   B00000100,
+   B00000100,
+   B00000100,
+   B00010001,
+   B01010001,
+   B01010001,
+   B01000000,
+   B00000000
+   //--Pluie7--//
+},
+{
+   B01000000,
+   B00000000,
+   B00000100,
+   B00000100,
+   B00000100,
+   B00010001,
+   B01010001,
+   B01010001,
+   B00000000
+   //--Pluie8--//
 }};
 byte affichage[][8] =
 {{
@@ -1141,6 +1300,117 @@ byte affichage[][8] =
   B00000000
   //--Most right--//
 }};
+byte animations[][9] =
+{{
+  B00000000,
+  B00000000,
+  B00000000,
+  B00000000,
+  B00000000,
+  B00000000,
+  B00000000,
+  B00000000,
+  B00000000 //position of the animation (0 à 3) -> affichage droit (3)
+},
+{
+  B00000000,
+  B00000000,
+  B00000000,
+  B00000000,
+  B00000000,
+  B00000000,
+  B00000000,
+  B00000000,
+  B00000000 //frames number of the animaion
+},
+{
+  B00000000,
+  B00000000,
+  B00000000,
+  B00000000,
+  B00000000,
+  B00000000,
+  B00000000,
+  B00000000,
+  B00000000
+},
+{
+  B00000000,
+  B00000000,
+  B00000000,
+  B00000000,
+  B00000000,
+  B00000000,
+  B00000000,
+  B00000000,
+  B00000000
+},
+{
+  B00000000,
+  B00000000,
+  B00000000,
+  B00000000,
+  B00000000,
+  B00000000,
+  B00000000,
+  B00000000,
+  B00000000
+},
+{
+  B00000000,
+  B00000000,
+  B00000000,
+  B00000000,
+  B00000000,
+  B00000000,
+  B00000000,
+  B00000000,
+  B00000000
+},
+{
+  B00000000,
+  B00000000,
+  B00000000,
+  B00000000,
+  B00000000,
+  B00000000,
+  B00000000,
+  B00000000,
+  B00000000
+},
+{
+  B00000000,
+  B00000000,
+  B00000000,
+  B00000000,
+  B00000000,
+  B00000000,
+  B00000000,
+  B00000000,
+  B00000000
+},
+{
+  B00000000,
+  B00000000,
+  B00000000,
+  B00000000,
+  B00000000,
+  B00000000,
+  B00000000,
+  B00000000,
+  B00000000
+},
+{
+  B00000000,
+  B00000000,
+  B00000000,
+  B00000000,
+  B00000000,
+  B00000000,
+  B00000000,
+  B00000000,
+  B00000000
+}};
 
 //char mot[] = "Loon";
 
@@ -1155,14 +1425,18 @@ void setup()
   }
   char mot[] = "Loon";
   charge_affichage(4,mot,CENTRE);
+  charge_affichage_special(PLUIE,3);
 }
 
 void loop()
 {
-  affiche();
   delay(3000);
-  charge_affichage(3,"Test",GAUCHE);
-  charge_affichage_special(3);
+  for (int i=0;i<8;i++) {
+    lc.setRow(0,i,animations[0][i]);
+  }
+  for (int i=0;i<8;i++) {
+    lc.setRow(1,i,animations[7][i]);
+  }
 }
 
 void affiche() {
@@ -1323,11 +1597,27 @@ void charge_affichage(int free_affichage, char mot[], int align) {
   }
 }
 
-void charge_affichage_special(int spe_aff_number) {
-  //spe_aff_number : numéro de l'affichage spécial à afficher (1 à 3)
+void charge_affichage_special(int spe_aff_number, int pos_affichage) {
+  //spe_aff_number : Affichage spécial à afficher (COEUR,SMILEY1,SMILEY2,COEUR_ANIMATE,DAMIER,PLUIE)
+  //pos_affichage : zone d'éclairage à utilisé (0 à 3) 0-> plus à gauche
   clear_one_affichage(3);
-  spe_aff_number -=1;
-  for (int ligne=0;ligne<8;ligne++) {
-    affichage[3][ligne] = spe_affichage_layout[spe_aff_number][ligne];
+  if (spe_aff_number<3) {
+    for (int ligne=0;ligne<8;ligne++) {
+      affichage[3][ligne] = spe_affichage_layout[spe_aff_number][ligne];
+    }
+  } else {
+    int frames_number = spe_affichage_layout[spe_aff_number][8];
+    for (int i=0;i<frames_number;i++) {
+      for (int ligne=0;ligne<8;ligne++) {
+        animations[i][ligne] = spe_affichage_layout[spe_aff_number][ligne];
+      }
+      spe_aff_number+=1;
+      if (i==0) {
+        animations[i][8] = pos_affichage;
+      } else if (i==1) {
+        animations[i][8] = frames_number;
+      }
+    }
+    animate = 1;
   }
 }
