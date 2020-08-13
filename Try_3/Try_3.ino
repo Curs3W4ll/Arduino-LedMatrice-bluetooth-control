@@ -15,7 +15,17 @@ const int COEUR_ANIMATE = 3;
 const int DAMIER = 5;
 const int PLUIE = 7;
 
-int animate = 0;
+int currentTime = 0;
+int previousTime = 0;
+
+byte animate[] =
+{
+  B00000000,//1 -> there is an animation | 0 -> no animation
+  B00000000,//Frames number of the animation
+  B00000000,//Actual frame of the animation
+  B00000000,//Pos de la zone d'affichage de l'animation
+  B00000000//Délai entre chaque frames de l'animation
+};
 
 byte testing[] =
 {
@@ -177,7 +187,7 @@ byte ascii[][8] =
    B00000000,
    B00000000,
    B00000000,
-   B11111000,
+   B11100000,
    B00000000,
    B00000000,
    B00000000
@@ -745,14 +755,14 @@ byte ascii[][8] =
    //--'--//
 },
 {
-   B00000000,
-   B00000000,
-   B00111000,
-   B00000100,
-   B00111100,
-   B01000100,
-   B01000100,
-   B00111100
+   B0000000,
+   B0000000,
+   B0000000,
+   B0011000,
+   B0000100,
+   B0011100,
+   B0100100,
+   B0011100
    //--a--//
 },
 {
@@ -1084,7 +1094,7 @@ byte spe_affichage_layout[][9] =
    B00111100,
    B00011000,
    B00000000,
-   B00000000 //Bit pour le nombre de frames de l'animation
+   B00000000
    //--Coeur fixe--//
 },
 {
@@ -1120,7 +1130,7 @@ byte spe_affichage_layout[][9] =
    B00111100,
    B00011000,
    B00000000,
-   B00000010
+   B00000010//Bit pour le nombre de frames de l'animation
    //--Coeur_animate1--//
 },
 {
@@ -1132,7 +1142,7 @@ byte spe_affichage_layout[][9] =
    B01111110,
    B00111100,
    B00011000,
-   B00000000
+   B00110010//Bit pour le délai entre chaque frame (en cs)
    //--Coeur_animate2--//
 },
 {
@@ -1156,7 +1166,7 @@ byte spe_affichage_layout[][9] =
    B10101010,
    B01010101,
    B10101010,
-   B00000000
+   B00011110
    //--Damier2--//
 },
 {
@@ -1180,7 +1190,7 @@ byte spe_affichage_layout[][9] =
    B00000100,
    B00000100,
    B00010001,
-   B00000000
+   B00000101
    //--Pluie2--//
 },
 {
@@ -1309,22 +1319,9 @@ byte animations[][9] =
   B00000000,
   B00000000,
   B00000000,
-  B00000000,
-  B00000000 //position of the animation (0 à 3) -> affichage droit (3)
+  B00000000
 },
 {
-  B00000000,
-  B00000000,
-  B00000000,
-  B00000000,
-  B00000000,
-  B00000000,
-  B00000000,
-  B00000000,
-  B00000000 //frames number of the animaion
-},
-{
-  B00000000,
   B00000000,
   B00000000,
   B00000000,
@@ -1342,22 +1339,9 @@ byte animations[][9] =
   B00000000,
   B00000000,
   B00000000,
-  B00000000,
   B00000000
 },
 {
-  B00000000,
-  B00000000,
-  B00000000,
-  B00000000,
-  B00000000,
-  B00000000,
-  B00000000,
-  B00000000,
-  B00000000
-},
-{
-  B00000000,
   B00000000,
   B00000000,
   B00000000,
@@ -1375,6 +1359,15 @@ byte animations[][9] =
   B00000000,
   B00000000,
   B00000000,
+  B00000000
+},
+{
+  B00000000,
+  B00000000,
+  B00000000,
+  B00000000,
+  B00000000,
+  B00000000,
   B00000000,
   B00000000
 },
@@ -1386,6 +1379,15 @@ byte animations[][9] =
   B00000000,
   B00000000,
   B00000000,
+  B00000000
+},
+{
+  B00000000,
+  B00000000,
+  B00000000,
+  B00000000,
+  B00000000,
+  B00000000,
   B00000000,
   B00000000
 },
@@ -1397,11 +1399,9 @@ byte animations[][9] =
   B00000000,
   B00000000,
   B00000000,
-  B00000000,
   B00000000
 },
 {
-  B00000000,
   B00000000,
   B00000000,
   B00000000,
@@ -1424,18 +1424,17 @@ void setup()
     lc.clearDisplay(i);  // Clear Displays
   }
   char mot[] = "Loon";
-  charge_affichage(4,mot,CENTRE);
+  charge_affichage(3,mot,CENTRE);
+  charge_affichage_special(SMILEY2,3);
+  affiche();
+  delay(2000);
   charge_affichage_special(PLUIE,3);
 }
 
 void loop()
 {
-  delay(3000);
-  for (int i=0;i<8;i++) {
-    lc.setRow(0,i,animations[0][i]);
-  }
-  for (int i=0;i<8;i++) {
-    lc.setRow(1,i,animations[7][i]);
+  if (animate[0]==1) {
+    affiche_animation();
   }
 }
 
@@ -1446,6 +1445,23 @@ void affiche() {
       lc.setRow(i,y,affichage[aff][y]);
     }
     aff--;
+  }
+}
+
+void affiche_animation() {
+  currentTime = millis();
+  if (currentTime-previousTime > animate[4]*10) {
+    clear_one_affichage(3);
+    for (int ligne=0;ligne<8;ligne++) {
+      affichage[3][ligne] = animations[animate[2]][ligne];
+    }
+    if (animate[2]==animate[1]-1) {
+      animate[2] = 0;
+    } else {
+      animate[2]+=1;
+    }
+    previousTime = currentTime;
+    affiche();
   }
 }
 
@@ -1607,17 +1623,16 @@ void charge_affichage_special(int spe_aff_number, int pos_affichage) {
     }
   } else {
     int frames_number = spe_affichage_layout[spe_aff_number][8];
+    animate[4] = spe_affichage_layout[spe_aff_number+1][8];
     for (int i=0;i<frames_number;i++) {
       for (int ligne=0;ligne<8;ligne++) {
         animations[i][ligne] = spe_affichage_layout[spe_aff_number][ligne];
       }
       spe_aff_number+=1;
-      if (i==0) {
-        animations[i][8] = pos_affichage;
-      } else if (i==1) {
-        animations[i][8] = frames_number;
-      }
     }
-    animate = 1;
+    animate[0] = 1;
+    animate[1] = frames_number;
+    animate[2] = 0;
+    animate[3] = pos_affichage;
   }
 }
