@@ -17,6 +17,7 @@ const int PLUIE = 7;
 
 int currentTime = 0;
 int previousTime = 0;
+int previousScroll = 0;
 
 byte animate[] =
 {
@@ -24,9 +25,15 @@ byte animate[] =
   B00000000,//Frames number of the animation
   B00000000,//Actual frame of the animation
   B00000000,//Pos de la zone d'affichage de l'animation
-  B00000000//Délai entre chaque frames de l'animation
+  B00000000//Délai entre chaque frames de l'animation (en cs)
 };
-
+byte scrolling[] =
+{
+  B00000000,//1 -> there is a scrolling animation | 0 -> no scrolling animation
+  B00000000,//Col numbers needed
+  B00000000,//Actual col number
+  B00000000//Délai entre chaque décalage de colonne (en cs)
+};
 byte testing[] =
 {
    B0,
@@ -1412,7 +1419,7 @@ byte animations[][9] =
   B00000000
 }};
 
-//char mot[] = "Loon";
+//char mot[] = "BlaBla";
 
 void setup()
 {
@@ -1425,10 +1432,8 @@ void setup()
   }
   char mot[] = "Loon";
   charge_affichage(3,mot,CENTRE);
-  charge_affichage_special(SMILEY2,3);
-  affiche();
-  delay(2000);
   charge_affichage_special(PLUIE,3);
+  affiche();
 }
 
 void loop()
@@ -1445,6 +1450,13 @@ void affiche() {
       lc.setRow(i,y,affichage[aff][y]);
     }
     aff--;
+  }
+}
+
+void affiche_scrolling() {
+  currentTime = millis();
+  if (currentTime-previousScroll > scrolling[3]) {
+    clear_affichage(3);
   }
 }
 
@@ -1465,8 +1477,9 @@ void affiche_animation() {
   }
 }
 
-void clear_affichage() {
-  for (int aff=0;aff<4;aff++) {
+void clear_affichage(int affichage_number) {
+  //affichage_number : number of affichage to clear (most left starting)
+  for (int aff=0;aff<affichage_number;aff++) {
     for (int ligne=0;ligne<8;ligne++) {
       for (int biti=0;biti<8;biti++) {
         bitWrite(affichage[aff][ligne],biti,0);
@@ -1504,9 +1517,9 @@ int get_led_number(char mot[], int cara_number, int free_affichage) {
     if (cara>=0) {
       if (ascii_code == 0) {
         for (int ligne=0;ligne<8;ligne++) {
-            //bitWrite(affichage[free_affichage][ligne],writen_col,0);
+            bitWrite(affichage[free_affichage][ligne],writen_col,0);
         }
-        //writen_col += 1;
+        writen_col += 1;
       }
       for (int col=0;col<8;col++) {
         byte tempbyte = B00000000;
@@ -1535,8 +1548,11 @@ int get_led_number(char mot[], int cara_number, int free_affichage) {
 void charge_affichage(int free_affichage, char mot[], int align) {
   //free_affichage : Nombre de zone d'affichage à utiliser pour le texte (0 à 4);
   //mot[] : mot à afficher
-  //align[] : alignement, trois valeurs possibles : 'droite','gauche' et 'centre'
-  clear_affichage();
+  //align[] : alignement, trois valeurs possibles : 'DROITE','GAUCHE' et 'CENTRE'
+  if (free_affichage==4) {
+    animate[0] = 0;
+  }
+  clear_affichage(4);
   int writen_col = 0;
   int free_led = free_affichage * 8;
   int cara_number = 0;
@@ -1545,7 +1561,7 @@ void charge_affichage(int free_affichage, char mot[], int align) {
   }
   int used_led = get_led_number(mot,cara_number,free_affichage);
   if (used_led > free_led) {
-    charge_scrolling(free_affichage,used_led,mot);
+    //charge_scrolling(free_affichage,used_led,mot);
   } else {
     free_affichage -= 1;
     int unused_led = free_led - used_led;
@@ -1584,9 +1600,17 @@ void charge_affichage(int free_affichage, char mot[], int align) {
       if (cara>=0) {
         if (ascii_code == 0) {
           for (int ligne=0;ligne<8;ligne++) {
-              //bitWrite(affichage[free_affichage][ligne],writen_col,0);
+              bitWrite(affichage[free_affichage][ligne],writen_col,0);
           }
-          //writen_col += 1;
+          writen_col += 1;
+          if (writen_col==8) {
+            writen_col = 0;
+            if (free_affichage==0) {
+              cara = -1;
+            } else {
+              free_affichage -= 1;
+            }
+          }
         }
         for (int col=0;col<8;col++) {
           byte tempbyte = B00000000;
@@ -1622,6 +1646,7 @@ void charge_affichage_special(int spe_aff_number, int pos_affichage) {
   //pos_affichage : zone d'éclairage à utilisé (0 à 3) 0-> plus à gauche
   clear_one_affichage(3);
   if (spe_aff_number<3) {
+    animate[0] = 0;
     for (int ligne=0;ligne<8;ligne++) {
       affichage[3][ligne] = spe_affichage_layout[spe_aff_number][ligne];
     }
