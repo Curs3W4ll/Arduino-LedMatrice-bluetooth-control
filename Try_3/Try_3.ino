@@ -1544,67 +1544,71 @@ void charge_affichage(int free_affichage, char mot[], int align) {
     cara_number += 1;
   }
   int used_led = get_led_number(mot,cara_number,free_affichage);
-  free_affichage -= 1;
-  int unused_led = free_led - used_led;
-  if (free_led-used_led > 0) {
-    switch(align) {
-      case DROITE:
-        writen_col = 0;
-        break;
-      case GAUCHE:
-        writen_col = unused_led;
-        break;
-      case CENTRE:
-        writen_col = unused_led/2;
-        break;
-      default:
-        writen_col = 0;
-        break;
-    }
-  }
-  for (int cara=cara_number-1;cara>=0;cara--) {
-    int ascii_code = ((int)mot[cara])-32;
-    if (cara!=cara_number-1) {
-      for (int ligne=0;ligne<8;ligne++) {
-          bitWrite(affichage[free_affichage][ligne],writen_col,0);
-      }
-      writen_col += 1;
-      if (writen_col==8) {
-        writen_col = 0;
-        if (free_affichage==0) {
-          cara = -1;
-        } else {
-          free_affichage -= 1;
-        }
+  if (used_led > free_led) {
+    charge_scrolling(free_affichage,used_led,mot);
+  } else {
+    free_affichage -= 1;
+    int unused_led = free_led - used_led;
+    if (free_led-used_led > 0) {
+      switch(align) {
+        case DROITE:
+          writen_col = 0;
+          break;
+        case GAUCHE:
+          writen_col = unused_led;
+          break;
+        case CENTRE:
+          writen_col = unused_led/2;
+          break;
+        default:
+          writen_col = 0;
+          break;
       }
     }
-    if (cara>=0) {
-      if (ascii_code == 0) {
+    for (int cara=cara_number-1;cara>=0;cara--) {
+      int ascii_code = ((int)mot[cara])-32;
+      if (cara!=cara_number-1) {
         for (int ligne=0;ligne<8;ligne++) {
-            //bitWrite(affichage[free_affichage][ligne],writen_col,0);
+            bitWrite(affichage[free_affichage][ligne],writen_col,0);
         }
-        //writen_col += 1;
-      }
-      for (int col=0;col<8;col++) {
-        byte tempbyte = B00000000;
-        for (int ligne=0;ligne<8;ligne++) {
-          bitWrite(tempbyte,ligne,bitRead(ascii[ascii_code][ligne],col));
-        }
-        //Serial.println(tempbyte,BIN);
-        if (tempbyte!=0) {
-          //Serial.println(tempbyte,BIN);
-          for (int ligne=0;ligne<8;ligne++) {
-            bitWrite(affichage[free_affichage][ligne],writen_col,bitRead(tempbyte,ligne));
-            //Serial.println(affichage[0][j],BIN);
+        writen_col += 1;
+        if (writen_col==8) {
+          writen_col = 0;
+          if (free_affichage==0) {
+            cara = -1;
+          } else {
+            free_affichage -= 1;
           }
-          writen_col += 1;
-          if (writen_col==8) {
-            writen_col = 0;
-            if (free_affichage==0) {
-              col = 8;
-              cara = -1;
-            } else {
-              free_affichage -= 1;
+        }
+      }
+      if (cara>=0) {
+        if (ascii_code == 0) {
+          for (int ligne=0;ligne<8;ligne++) {
+              //bitWrite(affichage[free_affichage][ligne],writen_col,0);
+          }
+          //writen_col += 1;
+        }
+        for (int col=0;col<8;col++) {
+          byte tempbyte = B00000000;
+          for (int ligne=0;ligne<8;ligne++) {
+            bitWrite(tempbyte,ligne,bitRead(ascii[ascii_code][ligne],col));
+          }
+          //Serial.println(tempbyte,BIN);
+          if (tempbyte!=0) {
+            //Serial.println(tempbyte,BIN);
+            for (int ligne=0;ligne<8;ligne++) {
+              bitWrite(affichage[free_affichage][ligne],writen_col,bitRead(tempbyte,ligne));
+              //Serial.println(affichage[0][j],BIN);
+            }
+            writen_col += 1;
+            if (writen_col==8) {
+              writen_col = 0;
+              if (free_affichage==0) {
+                col = 8;
+                cara = -1;
+              } else {
+                free_affichage -= 1;
+              }
             }
           }
         }
