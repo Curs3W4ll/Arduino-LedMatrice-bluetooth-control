@@ -1,6 +1,6 @@
 # Arduino afficheur matrice led par contrôle bluetooth
 
-Un afficheur matrice de 8x32 LEDS contrôlé par une application mobile avec une liaison bluetooth à l'arduino
+Un afficheur matrice de 8x32 LEDS contrôlé par une application mobile avec une liaison bluetooth à l'arduino   
 
 ---
 ![Exemple matrice](img/matrice.jpg)
