@@ -19,6 +19,8 @@ int currentTime = 0;
 int previousTime = 0;
 int previousScroll = 0;
 
+char scrolling_mot[50] = "Loon_OW";
+
 byte animate[] =
 {
   B00000000,//1 -> there is an animation | 0 -> no animation
@@ -32,7 +34,8 @@ byte scrolling[] =
   B00000000,//1 -> there is a scrolling animation | 0 -> no scrolling animation
   B00000000,//Col numbers needed
   B00000000,//Actual col number
-  B00000000//Délai entre chaque décalage de colonne (en cs)
+  B00000000,//Délai entre chaque décalage de colonne (en cs)
+  B00000000//free_affichages (1 à 4)
 };
 byte testing[] =
 {
@@ -1179,9 +1182,9 @@ byte spe_affichage_layout[][9] =
 {
    B01010001,
    B01000000,
-   B00000000,
-   B00000100,
-   B00000100,
+   B00100000,
+   B00100100,
+   B00100100,
    B00000100,
    B00010001,
    B01010001,
@@ -1192,9 +1195,9 @@ byte spe_affichage_layout[][9] =
    B01010001,
    B01010001,
    B01000000,
-   B00000000,
-   B00000100,
-   B00000100,
+   B00100000,
+   B00100100,
+   B00100100,
    B00000100,
    B00010001,
    B00000101
@@ -1205,9 +1208,9 @@ byte spe_affichage_layout[][9] =
    B01010001,
    B01010001,
    B01000000,
-   B00000000,
-   B00000100,
-   B00000100,
+   B00100000,
+   B00100100,
+   B00100100,
    B00000100,
    B00000000
    //--Pluie3--//
@@ -1218,40 +1221,40 @@ byte spe_affichage_layout[][9] =
    B01010001,
    B01010001,
    B01000000,
-   B00000000,
-   B00000100,
-   B00000100,
+   B00100000,
+   B00100100,
+   B00100100,
    B00000000
    //--Pluie4--//
 },
 {
-   B00000100,
+   B00100100,
    B00000100,
    B00010001,
    B01010001,
    B01010001,
    B01000000,
-   B00000000,
-   B00000100,
-   B00000000
+   B00100000,
+   B00100100,
+   B00100000
    //--Pluie5--//
 },
 {
-   B00000100,
-   B00000100,
+   B00100100,
+   B00100100,
    B00000100,
    B00010001,
    B01010001,
    B01010001,
    B01000000,
-   B00000000,
-   B00000000
+   B00100000,
+   B00100000
    //--Pluie6--//
 },
 {
-   B00000000,
-   B00000100,
-   B00000100,
+   B00100000,
+   B00100100,
+   B00100100,
    B00000100,
    B00010001,
    B01010001,
@@ -1262,9 +1265,9 @@ byte spe_affichage_layout[][9] =
 },
 {
    B01000000,
-   B00000000,
-   B00000100,
-   B00000100,
+   B00100000,
+   B00100100,
+   B00100100,
    B00000100,
    B00010001,
    B01010001,
@@ -1419,19 +1422,12 @@ byte animations[][9] =
   B00000000
 }};
 
-//char mot[] = "BlaBla";
-
 void setup()
 {
   Serial.begin(9600);
   Serial.println("New-------");
-  for (int i = 0; i < 4; i++) {
-    lc.shutdown(i,false);  // Wake up displays
-    lc.setIntensity(i,1);  // Set intensity levels
-    lc.clearDisplay(i);  // Clear Displays
-  }
-  char mot[] = "Loon";
-  charge_affichage(3,mot,CENTRE);
+  Init_affichages(4,1);
+  charge_affichage(3,"Loon",CENTRE);
   charge_affichage_special(PLUIE,3);
   affiche();
 }
@@ -1440,6 +1436,17 @@ void loop()
 {
   if (animate[0]==1) {
     affiche_animation();
+  }
+  if (scrolling[0]==1) {
+    affiche_scrolling();
+  }
+}
+
+void Init_affichages(int affichages_number, int intesity) {
+  for (int i = 0; i < affichages_number; i++) {
+    lc.shutdown(i,false);  // Wake up displays
+    lc.setIntensity(i,intesity);  // Set intensity levels
+    lc.clearDisplay(i);  // Clear Displays
   }
 }
 
@@ -1456,7 +1463,69 @@ void affiche() {
 void affiche_scrolling() {
   currentTime = millis();
   if (currentTime-previousScroll > scrolling[3]) {
-    clear_affichage(3);
+    clear_affichage(scrolling[4]);
+    int writen_col = 0;
+    int free_led = scrolling[4] * 8;
+    int free_affichages = scrolling[4]-1;
+    int cara_number = 0;
+    for (int cara=0;scrolling_mot[cara]!='\0';cara++) {
+      cara_number += 1;
+    }
+    for (int cara=cara_number-1;cara>=0;cara--) {
+      int ascii_code = ((int)scrolling_mot[cara])-32;
+      if (cara!=cara_number-1) {
+        for (int ligne=0;ligne<8;ligne++) {
+            bitWrite(affichage[free_affichage][ligne],writen_col,0);
+        }
+        writen_col += 1;
+        if (writen_col==8) {
+          writen_col = 0;
+          if (free_affichage==0) {
+            cara = -1;
+          } else {
+            free_affichage -= 1;
+          }
+        }
+      }
+      if (cara>=0) {
+        if (ascii_code == 0) {
+          for (int ligne=0;ligne<8;ligne++) {
+              bitWrite(affichage[free_affichage][ligne],writen_col,0);
+          }
+          writen_col += 1;
+          if (writen_col==8) {
+            writen_col = 0;
+            if (free_affichage==0) {
+              cara = -1;
+            } else {
+              free_affichage -= 1;
+            }
+          }
+        }
+        for (int col=0;col<8;col++) {
+          byte tempbyte = B00000000;
+          for (int ligne=0;ligne<8;ligne++) {
+            bitWrite(tempbyte,ligne,bitRead(ascii[ascii_code][ligne],col));
+          }
+          if (tempbyte!=0) {
+            for (int ligne=0;ligne<8;ligne++) {
+              bitWrite(affichage[free_affichage][ligne],writen_col,bitRead(tempbyte,ligne));
+            }
+            writen_col += 1;
+            if (writen_col==8) {
+              writen_col = 0;
+              if (free_affichage==0) {
+                col = 8;
+                cara = -1;
+              } else {
+                free_affichage -= 1;
+              }
+            }
+          }
+        }
+      }
+    }
+    affiche();
   }
 }
 
@@ -1561,7 +1630,13 @@ void charge_affichage(int free_affichage, char mot[], int align) {
   }
   int used_led = get_led_number(mot,cara_number,free_affichage);
   if (used_led > free_led) {
-    //charge_scrolling(free_affichage,used_led,mot);
+    scrolling[0] = 1;
+    scrolling[1] = used_led;
+    scrolling[2] = 0;
+    scrolling[3] = 50;
+    scrolling[4] = free_affichage;
+    scrolling_mot = mot;
+    affiche_scrolling();
   } else {
     free_affichage -= 1;
     int unused_led = free_led - used_led;
@@ -1617,12 +1692,9 @@ void charge_affichage(int free_affichage, char mot[], int align) {
           for (int ligne=0;ligne<8;ligne++) {
             bitWrite(tempbyte,ligne,bitRead(ascii[ascii_code][ligne],col));
           }
-          //Serial.println(tempbyte,BIN);
           if (tempbyte!=0) {
-            //Serial.println(tempbyte,BIN);
             for (int ligne=0;ligne<8;ligne++) {
               bitWrite(affichage[free_affichage][ligne],writen_col,bitRead(tempbyte,ligne));
-              //Serial.println(affichage[0][j],BIN);
             }
             writen_col += 1;
             if (writen_col==8) {
