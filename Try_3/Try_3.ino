@@ -1462,7 +1462,7 @@ void affiche() {
 
 void affiche_scrolling() {
   currentTime = millis();
-  if (currentTime-previousScroll > scrolling[3]) {
+  //if (currentTime-previousScroll > scrolling[3]) {
     clear_affichage(scrolling[4]);
     int writen_col = 0;
     int free_led = scrolling[4] * 8;
@@ -1526,7 +1526,7 @@ void affiche_scrolling() {
       }
     }
     affiche();
-  }
+  //}
 }
 
 void affiche_animation() {
@@ -1630,7 +1630,7 @@ void charge_affichage(int free_affichage, char mot[], int align) {
   }
   int used_led = get_led_number(mot,cara_number,free_affichage);
   if (used_led > free_led) {
-    scrolling[0] = 1;
+    //scrolling[0] = 1;
     scrolling[1] = used_led;
     scrolling[2] = 0;
     scrolling[3] = 50;
