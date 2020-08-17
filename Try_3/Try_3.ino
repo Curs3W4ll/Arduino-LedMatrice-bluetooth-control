@@ -1427,7 +1427,7 @@ void setup()
   Serial.begin(9600);
   Serial.println("New-------");
   Init_affichages(4,1);
-  charge_affichage(3,"Loon",CENTRE);
+  charge_affichage(3,"Loon_OW",CENTRE);
   charge_affichage_special(PLUIE,3);
   affiche();
 }
@@ -1462,15 +1462,18 @@ void affiche() {
 
 void affiche_scrolling() {
   currentTime = millis();
-  //if (currentTime-previousScroll > scrolling[3]) {
+  if (currentTime-previousScroll > scrolling[3]) {
     clear_affichage(scrolling[4]);
-    int writen_col = 0;
     int free_led = scrolling[4] * 8;
-    int free_affichages = scrolling[4]-1;
-    int cara_number = 0;
-    for (int cara=0;scrolling_mot[cara]!='\0';cara++) {
-      cara_number += 1;
+    int writen_col = scrolling[2];
+    writen_col -= scrolling[1];
+    int free_affichage = scrolling[4]-1;
+    while (writen_col>7) {
+      writen_col -= 8;
+      free_affichage -= 1;
     }
+    Serial.println(writen_col);
+    int cara_number = strlen(scrolling_mot);
     for (int cara=cara_number-1;cara>=0;cara--) {
       int ascii_code = ((int)scrolling_mot[cara])-32;
       if (cara!=cara_number-1) {
@@ -1526,7 +1529,12 @@ void affiche_scrolling() {
       }
     }
     affiche();
-  //}
+    if (scrolling[2]==scrolling[1]+free_led) {
+      scrolling[2] = 0;
+    } else {
+      scrolling[2]+=1;
+    }
+  }
 }
 
 void affiche_animation() {
@@ -1568,46 +1576,21 @@ void clear_one_affichage(int aff_number) {
 
 int get_led_number(char mot[], int cara_number, int free_affichage) {
   int led_number = 0;
-  int writen_col = 0;
   for (int cara=cara_number-1;cara>=0;cara--) {
     int ascii_code = ((int)mot[cara])-32;
     if (cara!=cara_number-1) {
-      led_number += 1;
-      writen_col += 1;
-      if (writen_col==8) {
-        writen_col = 0;
-        if (free_affichage==0) {
-          cara = -1;
-        } else {
-          free_affichage -= 1;
-        }
-      }
+      led_number+=1;
     }
-    if (cara>=0) {
-      if (ascii_code == 0) {
-        for (int ligne=0;ligne<8;ligne++) {
-            bitWrite(affichage[free_affichage][ligne],writen_col,0);
-        }
-        writen_col += 1;
+    if (ascii_code==0) {
+      led_number+=1;
+    }
+    for (int col=0;col<8;col++) {
+      byte tempbyte = B00000000;
+      for (int ligne=0;ligne<8;ligne++) {
+        bitWrite(tempbyte,ligne,bitRead(ascii[ascii_code][ligne],col));
       }
-      for (int col=0;col<8;col++) {
-        byte tempbyte = B00000000;
-        for (int ligne=0;ligne<8;ligne++) {
-          bitWrite(tempbyte,ligne,bitRead(ascii[ascii_code][ligne],col));
-        }
-        if (tempbyte!=0) {
-          writen_col += 1;
-          led_number += 1;
-          if (writen_col==8) {
-            writen_col = 0;
-            if (free_affichage==0) {
-              col = 8;
-              cara = -1;
-            } else {
-              free_affichage -= 1;
-            }
-          }
-        }
+      if (tempbyte!=0) {
+        led_number+=1;
       }
     }
   }
@@ -1624,18 +1607,15 @@ void charge_affichage(int free_affichage, char mot[], int align) {
   clear_affichage(4);
   int writen_col = 0;
   int free_led = free_affichage * 8;
-  int cara_number = 0;
-  for (int cara=0;mot[cara]!='\0';cara++) {
-    cara_number += 1;
-  }
+  int cara_number = strlen(mot);
   int used_led = get_led_number(mot,cara_number,free_affichage);
   if (used_led > free_led) {
-    //scrolling[0] = 1;
+    scrolling[0] = 1;
     scrolling[1] = used_led;
     scrolling[2] = 0;
     scrolling[3] = 50;
     scrolling[4] = free_affichage;
-    scrolling_mot = mot;
+    strncpy(scrolling_mot,mot,cara_number);
     affiche_scrolling();
   } else {
     free_affichage -= 1;
