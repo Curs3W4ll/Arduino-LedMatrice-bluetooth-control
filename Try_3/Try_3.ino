@@ -1427,8 +1427,8 @@ void setup()
   Serial.begin(9600);
   Serial.println("New-------");
   Init_affichages(4,1);
-  charge_affichage(3,"Loon_OW",CENTRE);
-  charge_affichage_special(PLUIE,3);
+  charge_affichage(4,"Loon_OW",CENTRE);
+  //charge_affichage_special(PLUIE,3);
   affiche();
 }
 
@@ -1530,10 +1530,17 @@ void affiche_scrolling() {
     }
     affiche();
     if (scrolling[2]==scrolling[1]+free_led) {
+      Serial.println("Fin");
+      Serial.println(scrolling[0]);
+      Serial.println(scrolling[1]);
+      Serial.println(scrolling[2]);
+      Serial.println(scrolling[3]);
+      Serial.println(scrolling[4]);
       scrolling[2] = 0;
     } else {
       scrolling[2]+=1;
     }
+    previousScroll = currentTime;
   }
 }
 
@@ -1613,7 +1620,7 @@ void charge_affichage(int free_affichage, char mot[], int align) {
     scrolling[0] = 1;
     scrolling[1] = used_led;
     scrolling[2] = 0;
-    scrolling[3] = 50;
+    scrolling[3] = 75;
     scrolling[4] = free_affichage;
     strncpy(scrolling_mot,mot,cara_number);
     affiche_scrolling();
