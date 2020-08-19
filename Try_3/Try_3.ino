@@ -1478,7 +1478,9 @@ void affiche_scrolling() {
       int ascii_code = ((int)scrolling_mot[cara])-32;
       if (cara!=cara_number-1) {
         for (int ligne=0;ligne<8;ligne++) {
+          if (writen_col > 0) {
             bitWrite(affichage[free_affichage][ligne],writen_col,0);
+          }
         }
         writen_col += 1;
         if (writen_col==8) {
@@ -1493,7 +1495,9 @@ void affiche_scrolling() {
       if (cara>=0) {
         if (ascii_code == 0) {
           for (int ligne=0;ligne<8;ligne++) {
+            if (writen_col >= 0) {
               bitWrite(affichage[free_affichage][ligne],writen_col,0);
+            }
           }
           writen_col += 1;
           if (writen_col==8) {
@@ -1508,11 +1512,15 @@ void affiche_scrolling() {
         for (int col=0;col<8;col++) {
           byte tempbyte = B00000000;
           for (int ligne=0;ligne<8;ligne++) {
-            bitWrite(tempbyte,ligne,bitRead(ascii[ascii_code][ligne],col));
+            if (writen_col >= 0) {
+              bitWrite(tempbyte,ligne,bitRead(ascii[ascii_code][ligne],col));
+            }
           }
           if (tempbyte!=0) {
             for (int ligne=0;ligne<8;ligne++) {
-              bitWrite(affichage[free_affichage][ligne],writen_col,bitRead(tempbyte,ligne));
+              if (writen_col >= 0) {
+                bitWrite(affichage[free_affichage][ligne],writen_col,bitRead(tempbyte,ligne));
+              }
             }
             writen_col += 1;
             if (writen_col==8) {
@@ -1530,12 +1538,6 @@ void affiche_scrolling() {
     }
     affiche();
     if (scrolling[2]==scrolling[1]+free_led) {
-      Serial.println("Fin");
-      Serial.println(scrolling[0]);
-      Serial.println(scrolling[1]);
-      Serial.println(scrolling[2]);
-      Serial.println(scrolling[3]);
-      Serial.println(scrolling[4]);
       scrolling[2] = 0;
     } else {
       scrolling[2]+=1;
@@ -1620,7 +1622,7 @@ void charge_affichage(int free_affichage, char mot[], int align) {
     scrolling[0] = 1;
     scrolling[1] = used_led;
     scrolling[2] = 0;
-    scrolling[3] = 75;
+    scrolling[3] = 200;
     scrolling[4] = free_affichage;
     strncpy(scrolling_mot,mot,cara_number);
     affiche_scrolling();
