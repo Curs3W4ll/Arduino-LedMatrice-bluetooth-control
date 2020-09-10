@@ -1479,6 +1479,7 @@ void affiche_scrolling() {
       if (cara!=cara_number-1) {
         for (int ligne=0;ligne<8;ligne++) {
           if (writen_col > 0) {
+            Serial.println(writen_col);
             bitWrite(affichage[free_affichage][ligne],writen_col,0);
           }
         }
